@@ -27,7 +27,7 @@
 		</div>
 		<ul class="navbar_menu">
 			<li><a href="/">HOME</a></li>
-			<li><a href="/products/list">PRODUCTS</a></li>
+			<li><a href="/product/list">PRODUCTS</a></li>
 			<li><a href="/chat/intro">CHAT</a></li>
 			<li><a href="/board/list">BOARD</a></li>
 		</ul>
@@ -36,7 +36,6 @@
 		<sec:authorize access="isAnonymous()">
 			<ul class="navbar_icons">
 				<li><a href="/user/userLogin">Login</a></li>
-
 				<li><a href="/user/signUp">Sign Up</a></li>
 			</ul>
 		</sec:authorize>
@@ -45,7 +44,11 @@
 		<sec:authorize access="hasRole('ROLE_MEMBER')">
 			<ul class="navbar_icons">
 				<sec:authentication property="principal" var="principal" />
+<<<<<<< HEAD
+				<li><a href="/user/userLogout">Logout</a></li>
+=======
 				<li><a href="/chat/intro">채팅</a></li>
+>>>>>>> 6c5c74db996c6928eeb8394c1ca243c8fa3f755d
 				<!-- 스프링 시큐리티 principal 가져오는 라이브러리 선언
 		security > domain > CustomUser.java에 선언된 field를 불러온다. -->
 				<sec:authentication property="principal" var="principal" />

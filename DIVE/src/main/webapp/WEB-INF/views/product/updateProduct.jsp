@@ -65,30 +65,30 @@
 		<div class="top">
 			<h1>상품 등록 페이지</h1>
 			<div class="logo">
-				<a href="./index.html"><i class="fas fa-universal-access"
+				<a href="/"><i class="fas fa-universal-access"
 					style="cursor: pointer"></i></a>
 			</div>
 		</div>
-		<form role="form" action="/product/register" method="post">
+		<form role="form" action="/product/updateProduct" method="post">
 			<div class="board">
 				<div class="board_title">
 					<h3>제목</h3>
-					<input type="text" name="title" class="board_title_write">
+					<input type="text" name="title" class="board_title_write" value="${product.title}">
 				</div>
 				<div class="box">
 					<div class="board_region">
 						<h4>판매자 지역</h4>
 						<input type="text" name="region" class="board_size" list="depList"
-							placeholder="ex) 서울">
+							value="${product.region}">
 					</div>
 					<div class="board_price">
 						<h4>희망 가격</h4>
-						<input type="text" name="price" class="board_size">
+						<input type="text" name="price" class="board_size" value="${product.price}">
 					</div>
 				</div>
 				<div class="board_content">
 					<h3>내용</h3>
-					<textarea name="description" class="board_content_write"></textarea>
+					<textarea name="description" class="board_content_write">${product.description}</textarea>
 				</div>
 				
 			</div>
@@ -98,9 +98,17 @@
 				<input type='hidden' name="userNum"
 					value="<sec:authentication property="principal.user.id"/>" /> <input
 					type='hidden' name="${_csrf.parameterName}" value="${_csrf.token}" />
-				<button type="submit" class="btn_registration">등록</button>
+				<button type="submit" class="btn_registration">수정</button>
 				<a href="/product/list"><button class="btn_list">목록</button></a>
 			</div>
+			
+			<input type="hidden" id="pageNum" name="pageNum" value="${criteria.pageNum}" />
+			<input type="hidden" id="amount" name="amount" value="${criteria.amount}" />
+			<input type="hidden" name="type" value="${criteria.type}" />
+			<input type="hidden" name="keyword" value="${criteria.keyword}" />
+			<input type="hidden" name="userNum" value="${product.userNum}"/>
+			<input type="hidden" name="id" value="${product.id}"/>
+			<input type='hidden' name="${_csrf.parameterName}" value="${_csrf.token}" />
 		</form>
 				<div class="dragndrap uploadDiv">
 					<h3>파일 첨부</h3>
@@ -114,37 +122,12 @@
 	</div>
 </div>
 
-
 <script src="../resources/js/productwrite.js"></script>
 </body>
 </html>
 <script>
 $(document).ready(function(){
-	
-	//목록 조회로 돌아가기
-	$(".btn_list").on("click", function(e){
-		e.preventDefault();
-		location.href="/product/list";
-	})
-	
-var formObj = $("form[role='form']");
-//게시물 등록 시에 첨부 파일 정보까지 함께 처리하기
-$("button[type='submit']").on("click", function(e){
-	e.preventDefault();
-	
-	var outStr = "";
-	
-	$(".uploadResult ul li").each(function(i, obj){
-		var jobj = $(obj);
-		
-		outStr += "<input type='hidden' name='listAttach[" + i + "].fileName' value='" + jobj.data("filename") + "'>";
-		outStr += "<input type='hidden' name='listAttach[" + i + "].uploadPath' value='" + jobj.data("uploadpath") + "'>";
-		outStr += "<input type='hidden' name='listAttach[" + i + "].uuid' value='" + jobj.data("uuid") + "'>";
-		outStr += "<input type='hidden' name='listAttach[" + i + "].fileType' value='" + jobj.data("image") + "'>";
-		
-	});
-	formObj.append(outStr).submit();
-});
+
 
 var extCheckRegExp = new RegExp("(.*?)\.(jpg|gif|png)$");
 var maxSize = 41943040;	//40M
@@ -164,6 +147,7 @@ function checkFileExtAndSize(fileName, fileSize) {
 	return true;
 }
 
+//문서 로드 직후에 깨끗한 상태 기억해 두기
 
 var uploadResultULTag = $(".uploadResult ul");
 
@@ -242,5 +226,64 @@ $(".uploadResult").on("click", "button", function(e){
 		}
 	});
 });
-})
+
+(function(){
+	var productId = "${product.id}"; 
+	$.getJSON("/product/getAttachList", {id : productId}, function(listAttach){
+		var outStr = "";
+		
+		$(listAttach).each(function(i, attachVO){
+			outStr += "<li data-uploadpath='" + attachVO.uploadPath 
+					+ "' data-uuid='" + attachVO.uuid
+					+ "' data-filename='" + attachVO.fileName
+					+ "' data-image='" + attachVO.fileType
+					+ "' data-separatoruuid='" + attachVO.fileNameSeparatorUuid
+					+ "'><div>";
+			var fileCallPath = encodeURIComponent(attachVO.uploadPath + "/"
+							 + attachVO.thumbnailHeader + attachVO.uuid
+							 + attachVO.fileNameSeparatorUuid + attachVO.fileName);
+			if(attachVO.fileType) {
+				outStr += "<span> " + attachVO.fileName + "<span>"
+						+ "<button type='button' data-file='" + fileCallPath + "' data-image='image' class='btn btn-wraning btn-circle'>"
+						+ "<i class='fa fa-times'></i></button><br>"
+						+ "<img src='/displayImage?absoluteFileName=" + fileCallPath + "'>";
+			} else {
+				outStr += "<span> " + attachVO.fileName + "</span><br>"
+						+ "<button type='button' data-file='" + fileCallPath + "' data-image='file' class='btn btn-wraning btn-circle'>"
+						+ "<i class='fa fa-times'></i></button><br>"
+						+ "<img src='/resources/img/attach.png'>";
+			}
+			outStr += "</div></li>";
+		});
+		
+		$(".uploadResult ul").html(outStr);
+	});
+})();
+
+$(".uploadResult").on("click", "button", function(e){
+	if(confirm("이미지 파일을 지우시겠습니까?")){
+		var targetLi = $(this).closest("li");
+		targetLi.remove();
+	}
+});
+
+
+var formObj = $("form[role='form']");
+$("button[type='submit']").on("click", function(e){
+	e.preventDefault();
+	
+	var outStr = "";
+	
+	$(".uploadResult ul li").each(function(i, obj){
+		var jobj = $(obj);
+		outStr += "<input type='hidden' name='listAttach[" + i + "].fileName' value='" + jobj.data("filename") + "'>";
+		outStr += "<input type='hidden' name='listAttach[" + i + "].uploadPath' value='" + jobj.data("uploadpath") + "'>";
+		outStr += "<input type='hidden' name='listAttach[" + i + "].uuid' value='" + jobj.data("uuid") + "'>";
+		outStr += "<input type='hidden' name='listAttach[" + i + "].fileType' value='" + jobj.data("image") + "'>";
+	});
+	formObj.append(outStr).submit;
+	formObj.submit();
+});
+
+});
 </script>

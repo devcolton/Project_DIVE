@@ -5,7 +5,7 @@
         }
 
         body {
-            background-image: url(./images/dive.png);
+            background-image: url(../images/dive.png);
             background-size: cover;
             background-repeat: no-repeat;
         }
